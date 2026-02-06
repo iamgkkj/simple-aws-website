@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS EC2 Apache Deployment Guide</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 30px;
+        }
+        ul {
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .highlight {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .site-title {
+            margin: 0;
+            font-size: 1.5em;
+            color: white;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+        }
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .footer-links {
+            display: flex;
+            gap: 15px;
+        }
+        .footer-links a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 1.2em;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover {
+            color: #2980b9;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        body.dark-mode .container {
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        body.dark-mode h1,
+        body.dark-mode h2 {
+            color: #ecf0f1;
+        }
+        body.dark-mode .highlight {
+            background-color: #34495e;
+            border-left-color: #3498db;
+        }
+        body.dark-mode footer {
+            border-top-color: #7f8c8d;
+            color: #bdc3c7;
+        }
+        body.dark-mode .theme-toggle {
+            color: #ecf0f1;
+        }
+        body.dark-mode .footer-links a {
+            color: #74c0fc;
+        }
+        body.dark-mode .footer-links a:hover {
+            color: #4dabf7;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="site-title">Simple AWS Website</h1>
+            <button id="theme-toggle" class="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+    <div class="container">
+        <h1>AWS EC2 Instance with Apache Web Server</h1>
+
+        <div class="highlight">
+            <p>This simple website demonstrates deploying a static site on an AWS EC2 instance using Apache middleware. Follow the steps below to launch your own instance and deploy this website.</p>
+        </div>
+
+        <h2>Step 1: Launch an EC2 Instance</h2>
+        <ol>
+            <li>Sign in to the AWS Management Console</li>
+            <li>Navigate to EC2 Dashboard</li>
+            <li>Click "Launch Instance"</li>
+            <li>Choose an Amazon Machine Image (AMI) - select Amazon Linux 2 or Ubuntu Server</li>
+            <li>Select an instance type (t2.micro for free tier)</li>
+            <li>Configure instance details (use defaults for simplicity)</li>
+            <li>Add storage (default 8GB is fine)</li>
+            <li>Add tags (optional but recommended, e.g., Name: Apache-Web-Server)</li>
+            <li>Configure security group:
+                <ul>
+                    <li>Type: HTTP, Protocol: TCP, Port Range: 80, Source: 0.0.0.0/0</li>
+                    <li>Type: SSH, Protocol: TCP, Port Range: 22, Source: Your IP or 0.0.0.0/0</li>
+                </ul>
+            </li>
+            <li>Review and launch</li>
+            <li>Create or select a key pair for SSH access</li>
+        </ol>
+
+        <h2>Step 2: Deploy Website using Apache</h2>
+        <ol>
+            <li>Connect to your instance via SSH:
+                <code>ssh -i your-key.pem ec2-user@your-instance-public-ip</code>
+            </li>
+            <li>Update the system: <code>sudo yum update -y</code> (Amazon Linux) or <code>sudo apt update && sudo apt upgrade -y</code> (Ubuntu)</li>
+            <li>Install Apache:
+                <ul>
+                    <li>Amazon Linux: <code>sudo yum install httpd -y</code></li>
+                    <li>Ubuntu: <code>sudo apt install apache2 -y</code></li>
+                </ul>
+            </li>
+            <li>Start Apache:
+                <ul>
+                    <li>Amazon Linux: <code>sudo systemctl start httpd && sudo systemctl enable httpd</code></li>
+                    <li>Ubuntu: <code>sudo systemctl start apache2 && sudo systemctl enable apache2</code></li>
+                </ul>
+            </li>
+            <li>Upload your website files to <code>/var/www/html/</code></li>
+            <li>Set proper permissions: <code>sudo chown -R apache:apache /var/www/html/</code> (Amazon Linux) or <code>sudo chown -R www-data:www-data /var/www/html/</code> (Ubuntu)</li>
+            <li>Access your website at the instance's public IP address</li>
+        </ol>
+
+        <h2>Key Points to Remember</h2>
+        <ul>
+            <li>Always stop your instances when not in use to avoid charges</li>
+            <li>Security groups control inbound traffic - keep them restrictive</li>
+            <li>Use AWS Free Tier resources to minimize costs while learning</li>
+            <li>Regularly backup your data and configurations</li>
+        </ul>
+
+        <footer>
+            <div class="footer-content">
+                <p>Created by Gopal</p>
+                <div class="footer-links">
+                    <a href="https://github.com/iamgkkj" target="_blank" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://www.linkedin.com/in/gopal-krishn-khoth-cse712003" target="_blank" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+        const icon = themeToggle.querySelector('i');
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        if (currentTheme === 'dark') {
+            body.classList.add('dark-mode');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+
+            if (body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+    </script>
+</body>
+</html>
